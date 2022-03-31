@@ -1,0 +1,103 @@
+<html>
+
+<head>
+    <!-- Moralis SDK code -->
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <script src="https://unpkg.com/moralis/dist/moralis.js"></script>
+    <style>
+        /* Take up whole screen without scrollbars */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            overflow: hidden;
+
+        }
+
+        #slideshow {
+            width: 100%;
+            height: 100%;
+        }
+
+        #slideshow div {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* center image on screen and fill maintain aspect ratio */
+        #slideshow img {
+            width: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- <button id="btn-login">Moralis Login</button>
+    <button id="btn-logout">Logout</button> -->
+    <div id="slideshow">
+
+    </div>
+    <script src="./src/jquery.js"></script>
+    <script>
+        // connect to Moralis server
+
+        const serverUrl = "https://3dzlowbyxkit.usemoralis.com:2053/server";
+        const appId = "gu2VgMiec0JdPpjJm0ZYceN4hpAOzorcKFgjAD50";
+        Moralis.start({ serverUrl, appId });
+
+        // // get NFTs for current user on Mainnet
+        // const userEthNFTs = await Moralis.Web3API.account.getNFTs();
+
+        // // get testnet NFTs for user
+        // const testnetNFTs = await Moralis.Web3API.account.getNFTs({ chain: "ropsten" });
+
+        // get polygon NFTs for address
+        // const options = {
+        //     chain: "polygon",
+        //     address: "0x75e3e9c92162e62000425c98769965a76c2e387a",
+        // };
+        // const polygonNFTs = await Moralis.Web3API.account.getNFTs(options);
+        function fixUrl(url) {
+            if (url.startsWith("ipfs")) {
+                return "https://ipfs.moralis.io:2053/ipfs/" + url.split("ipfs/")[1];
+            } else {
+                return url + "?format=json";
+            }
+        }
+
+        function imgError() {
+            //remove image if failed to load
+            $(this).remove();
+        }
+        async function loadNfts() {
+
+            const options = {
+                chain: "polygon",
+                address: "0x75e3e9c92162e62000425c98769965a76c2e387a",
+            };
+            const polygonNFTs = await Moralis.Web3API.account.getNFTs(options);
+            for (var i in polygonNFTs.result) {
+                var nft = polygonNFTs.result[i];
+                var url = fixUrl(nft.token_uri);
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(data);
+                        $(`<div><img src="${data.image}" onerror='imgError(this)'></img></div>`).appendTo('#slideshow').hide();
+                    });
+            }
+            $('#slideshow > div:first').show()
+            setInterval(function () {
+                //Do slide show
+                $('#slideshow > div:first').fadeOut(1000).next().fadeIn(1000).end().appendTo('#slideshow');
+            }, 5000);
+        }
+        loadNfts()
+
+    </script>
+</body>
+
+</html>
